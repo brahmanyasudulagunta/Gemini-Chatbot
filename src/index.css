@@ -448,6 +448,149 @@
     font-size: 1.8rem;
   }
   .welcome-text {
-    font-size: 1rem
+    font-size: 1rem;
   }
+}
+
+/* --- Premium Markdown & Code Block Typography --- */
+.markdown-body {
+  line-height: 1.6;
+  font-size: 1rem;
+  text-align: left;
+}
+
+.md-paragraph {
+  margin-bottom: 12px;
+}
+
+.md-spacer {
+  height: 8px;
+}
+
+.md-h1, .md-h2, .md-h3 {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-top: 18px;
+  margin-bottom: 8px;
+}
+
+.md-h1 { font-size: 1.6rem; }
+.md-h2 { font-size: 1.4rem; }
+.md-h3 { font-size: 1.2rem; }
+
+.md-list {
+  padding-left: 24px;
+  margin-bottom: 12px;
+}
+
+.bullet-list {
+  list-style-type: disc;
+}
+
+.ordered-list {
+  list-style-type: decimal;
+}
+
+.md-list li {
+  margin-bottom: 6px;
+}
+
+/* Inline Code style */
+.inline-code {
+  background-color: var(--color-bg-secondary);
+  color: #ff79c6; /* Pink/coral color for high readability in dark theme */
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.light-theme .inline-code {
+  color: #d62939; /* Classic dark-red/crimson for light theme */
+}
+
+/* Fenced Code Block styling - Terminal Mockup */
+.code-block-container {
+  margin: 16px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-hr);
+  background-color: #0f141c; /* Deep black-blue terminal palette */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: #161b22;
+  border-bottom: 1px solid var(--color-border-hr);
+}
+
+.code-block-lang {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-text-placeholder);
+  letter-spacing: 0.5px;
+}
+
+.code-block-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-placeholder);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.code-block-copy-btn:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-hover-secondary);
+}
+
+.code-block-pre {
+  margin: 0;
+  padding: 16px;
+  overflow-x: auto;
+  scrollbar-color: var(--color-text-placeholder) transparent;
+}
+
+.code-block-code {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9rem;
+  color: #e2e8f0;
+  white-space: pre;
+}
+
+/* Stop Generating Button inside Prompt form */
+.prompt-wrapper .stop-prompt-btn {
+  width: 43px;
+  height: 43px;
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  color: #fff;
+  background: #ef4444; /* Premium crimson */
+  transition: all 0.3s ease;
+}
+
+.prompt-form .stop-prompt-btn:hover {
+  background: #dc2626;
+  transform: translateY(-50%) scale(1.05);
 }
