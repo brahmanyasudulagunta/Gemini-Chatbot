@@ -2,7 +2,7 @@
 
 Welcome to the **Gemini Gen AI Chatbot**! This project is a sample chatbot powered by Google's Gemini Flash API, built using React and Vite. It allows users to interact with an AI assistant and receive responses in real-time.
 
-🚀 Features
+Features
 
 * **AI-powered chatbot** using Google's Gemini Flash API
 * **Real-time message handling** with smooth user experience
@@ -10,29 +10,29 @@ Welcome to the **Gemini Gen AI Chatbot**! This project is a sample chatbot power
 * **Error handling** for failed API calls
 * **Easy setup and deployment**
 
-🛠️ Technologies Used
+Technologies Used
 
 * **Frontend**: React, Vite
 * **AI Model**: Google's Gemini Flash API
 * **Styling**: Tailwind CSS (optional, based on your project's setup)
 
 
-📥 Installation & Setup
+Installation & Setup
 
-1️⃣ Clone the Repository
+1. Clone the Repository
 
 ```bash
 git clone https://github.com/Ashrith2727/gemini-gen-ai-chatbot.git
 cd gemini-gen-ai-chatbot
 ```
 
-2️⃣ Install Dependencies
+2. Install Dependencies
 
 ```bash
 npm install
 ```
 
-3️⃣ Set Up Environment Variables
+3. Set Up Environment Variables
 
 Create a `.env` file in the root directory and add your Gemini Flash API key:
 
@@ -43,13 +43,13 @@ VITE_API_URL=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-
 
 *Note: Replace `your_api_key_here` with your actual API key.*
 
-4️⃣ Start the Development Server
+ 4. Start the Development Server
 
 ```bash
 npm run dev
 ```
 
-⚙️ Customization
+Customization
 
 * **AI Model**: To switch to a different AI model, update the API endpoint in the `src/api.js` file.
 * **Styling**: Modify the `src/App.css` file to change the look and feel of the chatbot.
