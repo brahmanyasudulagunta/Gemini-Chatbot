@@ -1,0 +1,143 @@
+# ============================================================================
+# GitHub Actions CI/CD Pipeline for Gemini Chatbot
+# Equivalent of the Jenkinsfile — but running on GitHub's infrastructure
+# ============================================================================
+#
+# KEY CONCEPTS TO LEARN:
+#   - "workflow"  = the entire YAML file (like a Jenkinsfile)
+#   - "job"       = a group of steps that run on the same runner (like a stage)
+#   - "step"      = a single task inside a job (like a shell command)
+#   - "action"    = a reusable step from the GitHub Marketplace (like a Jenkins plugin)
+#   - "runner"    = the machine that executes the job (like a Jenkins agent)
+#   - "secret"    = encrypted variable stored in GitHub Settings (like Jenkins credentials)
+#
+# SECRETS YOU NEED TO SET (GitHub repo → Settings → Secrets and variables → Actions):
+#   - DOCKERHUB_USERNAME  : your Docker Hub username
+#   - DOCKERHUB_TOKEN     : a Docker Hub access token (not your password)
+#   - GEMINI_API_KEY      : your Gemini API key
+# ============================================================================
+
+# ── Name ────────────────────────────────────────────────────────────────────
+# This shows up in the "Actions" tab of your GitHub repo
+name: CI/CD Pipeline
+
+# ── Triggers ────────────────────────────────────────────────────────────────
+# "on" defines WHEN this workflow runs.
+# Jenkins equivalent: triggers { pollSCM('* * * * *') } or webhook
+on:
+  push:
+    branches: [main]          # Run on every push to main
+  pull_request:
+    branches: [main]          # Also run on PRs targeting main (build only, no deploy)
+  workflow_dispatch:           # Adds a "Run workflow" button in the Actions tab for manual runs
+
+# ── Environment Variables ───────────────────────────────────────────────────
+# Global env vars available to ALL jobs and steps (like Jenkins `environment {}` block)
+env:
+  IMAGE_NAME: vite
+  CONTAINER_NAME: vite-container
+  PORT: 5173
+  VITE_API_URL: "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key="
+
+# ── Jobs ────────────────────────────────────────────────────────────────────
+# Each job runs on a fresh runner. Jobs run in PARALLEL by default.
+# Use "needs" to create sequential dependencies (like Jenkins stages).
+jobs:
+
+  # ╔══════════════════════════════════════════════════════════════════════╗
+  # ║  JOB 1: BUILD & PUSH                                               ║
+  # ║  Jenkins stages: "Checkout Code" + "Build Docker Image"            ║
+  # ╚══════════════════════════════════════════════════════════════════════╝
+  build:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest     # GitHub-hosted runner (free for public repos)
+                                # Jenkins equivalent: agent { label 'ubuntu' }
+
+    steps:
+      # ── Step 1: Checkout Code ──────────────────────────────────────────
+      # Jenkins does this automatically, but GitHub Actions needs an explicit step.
+      # "uses" references a reusable action from the marketplace.
+      # "actions/checkout@v4" clones your repo into the runner's workspace.
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # ── Step 2: Log in to Docker Hub ───────────────────────────────────
+      # Jenkins equivalent: docker.withRegistry('https://index.docker.io', 'dockerhub')
+      # "${{ secrets.XYZ }}" pulls encrypted secrets from GitHub Settings.
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # ── Step 3: Set up Docker Buildx ───────────────────────────────────
+      # Buildx is Docker's next-gen build tool. It enables layer caching,
+      # multi-platform builds, and more efficient image creation.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ── Step 4: Build and Push ─────────────────────────────────────────
+      # Jenkins equivalent: sh 'docker build -t $IMAGE_NAME .'
+      # This action builds AND pushes in a single step with layer caching.
+      # Tags follow the pattern: username/image:tag
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .                   # Build context (where the Dockerfile is)
+          push: true                   # Push to registry after building
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha         # Use GitHub Actions cache for faster builds
+          cache-to: type=gha,mode=max  # Save layers to cache for next run
+
+  # ╔══════════════════════════════════════════════════════════════════════╗
+  # ║  JOB 2: DEPLOY                                                      ║
+  # ║  Jenkins stages: "Stop Old Container" + "Run New" + "Verify"        ║
+  # ║                                                                      ║
+  # ║  NOTE: This job uses a SELF-HOSTED runner. That means a machine     ║
+  # ║  YOU control (like the server where Jenkins was running).            ║
+  # ║  You install the GitHub Actions runner agent on it.                  ║
+  # ║  See: https://docs.github.com/en/actions/hosting-your-own-runners   ║
+  # ╚══════════════════════════════════════════════════════════════════════╝
+  deploy:
+    name: Deploy Container
+    needs: build               # Wait for "build" job to finish first
+                                # Jenkins equivalent: stages run sequentially by default
+    runs-on: self-hosted       # Runs on YOUR server (where Docker is installed)
+                                # Change to "ubuntu-latest" if you just want to test the workflow
+
+    # Only deploy on pushes to main (not on pull requests)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      # ── Step 1: Pull latest image ─────────────────────────────────────
+      - name: Pull Latest Image
+        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+
+      # ── Step 2: Stop old container ─────────────────────────────────────
+      # Jenkins equivalent: sh 'docker rm -f $CONTAINER_NAME || true'
+      # The "|| true" prevents the step from failing if no container exists.
+      - name: Stop Old Container
+        run: docker rm -f ${{ env.CONTAINER_NAME }} || true
+
+      # ── Step 3: Run new container ──────────────────────────────────────
+      # Jenkins equivalent: withCredentials([string(credentialsId: 'gemini', ...)])
+      # Secrets are injected as env vars — they're masked in logs automatically.
+      - name: Run New Container
+        run: |
+          docker run -d \
+            -p ${{ env.PORT }}:5173 \
+            --name ${{ env.CONTAINER_NAME }} \
+            -e VITE_API_KEY=${{ secrets.GEMINI_API_KEY }} \
+            -e VITE_API_URL="${{ env.VITE_API_URL }}" \
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+
+      # ── Step 4: Verify deployment ──────────────────────────────────────
+      # Jenkins equivalent: sh 'docker ps | grep $CONTAINER_NAME'
+      - name: Verify Deployment
+        run: |
+          echo "Waiting for container to start..."
+          sleep 3
+          docker ps | grep ${{ env.CONTAINER_NAME }}
+          echo "✅ Deployment successful!"
