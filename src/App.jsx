@@ -89,8 +89,9 @@ const App = () => {
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           contents: formattedMessages,
+          tools: [{ google_search: {} }],
           safetySettings: [
             { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
             { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -120,11 +121,11 @@ const App = () => {
         prev.map((conv) =>
           conv.id === activeConversation
             ? {
-                ...conv,
-                messages: conv.messages.map((msg) =>
-                  msg.id === botMessageId ? { ...msg, content: "", loading: true } : msg
-                ),
-              }
+              ...conv,
+              messages: conv.messages.map((msg) =>
+                msg.id === botMessageId ? { ...msg, content: "", loading: true } : msg
+              ),
+            }
             : conv
         )
       );
@@ -169,11 +170,11 @@ const App = () => {
                 prev.map((conv) =>
                   conv.id === activeConversation
                     ? {
-                        ...conv,
-                        messages: conv.messages.map((msg) =>
-                          msg.id === botMessageId ? { ...msg, content: streamText } : msg
-                        ),
-                      }
+                      ...conv,
+                      messages: conv.messages.map((msg) =>
+                        msg.id === botMessageId ? { ...msg, content: streamText } : msg
+                      ),
+                    }
                     : conv
                 )
               );
@@ -194,11 +195,11 @@ const App = () => {
         prev.map((conv) =>
           conv.id === activeConversation
             ? {
-                ...conv,
-                messages: conv.messages.map((msg) =>
-                  msg.id === botMessageId ? { ...msg, loading: false } : msg
-                ),
-              }
+              ...conv,
+              messages: conv.messages.map((msg) =>
+                msg.id === botMessageId ? { ...msg, loading: false } : msg
+              ),
+            }
             : conv
         )
       );
@@ -211,13 +212,13 @@ const App = () => {
           prev.map((conv) =>
             conv.id === activeConversation
               ? {
-                  ...conv,
-                  messages: conv.messages.map((msg) =>
-                    msg.id === botMessageId
-                      ? { ...msg, content: msg.content + " *[Generation stopped]*", loading: false }
-                      : msg
-                  ),
-                }
+                ...conv,
+                messages: conv.messages.map((msg) =>
+                  msg.id === botMessageId
+                    ? { ...msg, content: msg.content + " *[Generation stopped]*", loading: false }
+                    : msg
+                ),
+              }
               : conv
           )
         );
@@ -236,9 +237,9 @@ const App = () => {
       prev.map((conv) =>
         conv.id === activeConversation
           ? {
-              ...conv,
-              messages: conv.messages.map((msg) => (msg.id === botId ? { ...msg, content, loading: false, error: isError } : msg)),
-            }
+            ...conv,
+            messages: conv.messages.map((msg) => (msg.id === botId ? { ...msg, content, loading: false, error: isError } : msg)),
+          }
           : conv
       )
     );
