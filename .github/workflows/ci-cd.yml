@@ -11,7 +11,7 @@ env:
   IMAGE_NAME: vite
   CONTAINER_NAME: vite-container
   PORT: 5173
-  VITE_API_URL: "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key="
+  VITE_API_URL: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="
 
 jobs:
 
