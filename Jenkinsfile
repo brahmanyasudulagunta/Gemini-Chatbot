@@ -26,7 +26,7 @@ pipeline {
                 script {
                     docker.withRegistry('https://index.docker.io', 'dockerhub') {
                         // Build Frontend
-                        sh 'docker build -t $IMAGE_NAME .'
+                        sh 'cd frontend && docker build -t $IMAGE_NAME .'
                         
                         // Build Backend
                         sh 'cd backend && docker build -t $BACKEND_IMAGE_NAME .'
