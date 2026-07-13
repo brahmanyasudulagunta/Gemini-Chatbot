@@ -2,10 +2,15 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "vite"
-        CONTAINER_NAME = "vite-container"
+        // Frontend Variables
+        IMAGE_NAME = "chatgpt-frontend"
+        CONTAINER_NAME = "frontend"
         PORT = "5173"
-        VITE_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='
+        
+        // Backend Variables
+        BACKEND_IMAGE_NAME = "chatgpt-backend"
+        BACKEND_CONTAINER_NAME = "backend"
+        BACKEND_PORT = "8000"
     }
 
     stages {
@@ -15,42 +20,58 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Docker Images') {
             steps {
-                echo "Building Docker image with credentials..."
-               // Wrap the docker command in a script block
-               script {
-                   docker.withRegistry('https://index.docker.io', 'dockerhub') {
-                   sh 'docker build -t $IMAGE_NAME .'
-                      }
+                echo "Building Docker images with credentials..."
+                script {
+                    docker.withRegistry('https://index.docker.io', 'dockerhub') {
+                        // Build Frontend
+                        sh 'docker build -t $IMAGE_NAME .'
+                        
+                        // Build Backend
+                        sh 'cd backend && docker build -t $BACKEND_IMAGE_NAME .'
+                    }
                 }
              }
         }   
         
-        stage('Stop Old Container') {
+        stage('Stop Old Containers') {
             steps {
                 sh 'docker rm -f $CONTAINER_NAME || true'
+                sh 'docker rm -f $BACKEND_CONTAINER_NAME || true'
             }
         }
 
-        stage('Run New Container') {
+        stage('Run New Containers') {
             steps {
-                withCredentials([string(credentialsId: 'gemini', variable: 'GEMINI_API_KEY')]) {
+                // Run Backend
+                // Note: Make sure to add a Jenkins credential named 'openai_api_key' 
+                // containing your OpenAI API Key secret text.
+                withCredentials([string(credentialsId: 'openai_api_key', variable: 'OPENAI_API_KEY')]) {
                     sh '''
                       docker run -d \
-                        -p ${PORT}:5173 \
-                        --name $CONTAINER_NAME \
-                        -e VITE_API_KEY=$GEMINI_API_KEY \
-                        -e VITE_API_URL=$VITE_API_URL \
-                        $IMAGE_NAME
+                        -p ${BACKEND_PORT}:8000 \
+                        --name $BACKEND_CONTAINER_NAME \
+                        -e OPENAI_API_KEY=$OPENAI_API_KEY \
+                        $BACKEND_IMAGE_NAME
                     '''
                 }
+
+                // Run Frontend
+                sh '''
+                  docker run -d \
+                    -p ${PORT}:5173 \
+                    --name $CONTAINER_NAME \
+                    -e VITE_BACKEND_API_URL="http://localhost:8000/api/chat" \
+                    $IMAGE_NAME
+                '''
             }
         }
 
-        stage('Verify Deployment') {
+        stage('Verify Deployments') {
             steps {
                 sh 'docker ps | grep $CONTAINER_NAME'
+                sh 'docker ps | grep $BACKEND_CONTAINER_NAME'
             }
         }
     }
