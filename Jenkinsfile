@@ -2,13 +2,17 @@ pipeline {
     agent any
 
     environment {
+        // Docker Hub Credentials
+        // IMPORTANT: Replace this with your actual Docker Hub username!
+        DOCKERHUB_USERNAME = "brahmanya"
+
         // Frontend Variables
-        IMAGE_NAME = "chatgpt-frontend"
+        IMAGE_NAME = "${DOCKERHUB_USERNAME}/chatgpt-frontend"
         CONTAINER_NAME = "frontend"
         PORT = "5173"
         
         // Backend Variables
-        BACKEND_IMAGE_NAME = "chatgpt-backend"
+        BACKEND_IMAGE_NAME = "${DOCKERHUB_USERNAME}/chatgpt-backend"
         BACKEND_CONTAINER_NAME = "backend"
         BACKEND_PORT = "8000"
     }
@@ -20,16 +24,19 @@ pipeline {
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Build & Push Docker Images') {
             steps {
-                echo "Building Docker images with credentials..."
+                echo "Building and Pushing Docker images..."
                 script {
-                    docker.withRegistry('https://index.docker.io', 'dockerhub') {
-                        // Build Frontend
+                    // Make sure 'dockerhub' credentials ID exists in Jenkins
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
+                        // Build Images
                         sh 'cd frontend && docker build -t $IMAGE_NAME .'
-                        
-                        // Build Backend
                         sh 'cd backend && docker build -t $BACKEND_IMAGE_NAME .'
+                        
+                        // Push Images
+                        sh 'docker push $IMAGE_NAME'
+                        sh 'docker push $BACKEND_IMAGE_NAME'
                     }
                 }
              }
