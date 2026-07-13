@@ -164,8 +164,6 @@ const App = () => {
             }
           }
         }
-
-        buffer = buffer.substring(startIndex);
       }
 
       // Complete generation
